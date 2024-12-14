@@ -1,6 +1,5 @@
 package com.example.CoinDesk.service;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -8,6 +7,10 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.CoinDesk.dao.BpiDao;
 import com.example.CoinDesk.entity.Bpi;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CoinDeskService {
@@ -21,19 +24,40 @@ public class CoinDeskService {
 		return restTemplate.getForEntity("https://api.coindesk.com/v1/bpi/currentprice.json", String.class);
 	}
 
-	public void createBpi(JSONObject bpis) {
-		String[] codes = JSONObject.getNames(bpis);
-		for (String code : codes) {
-			Bpi bpi = new Bpi();
-			JSONObject props = bpis.getJSONObject(code);
-			bpi.setCode(code);
-			bpi.setName(getBpiName(code));
-			bpi.setSymbol(String.valueOf(props.get("symbol")));
-			bpi.setRate(Double.valueOf(String.valueOf(props.get("rate")).replace(",", "")));
-			bpi.setDescription(String.valueOf(props.get("description")));
-			bpi.setRate_float(Double.valueOf(String.valueOf(props.get("rate_float")).replace(",", "")));
-			bpiDao.save(bpi);
+	public int createBpi(String resString) {
+		int saveNum = 0;
+		
+		// 初始化 ObjectMapper
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 解析 JSON 字串為 JsonNode
+        JsonNode rootNode = null;
+		try {
+			rootNode = mapper.readTree(resString);
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
 		}
+
+        // 提取 "bpi" 節點
+        JsonNode bpiNode = rootNode.get("bpi");
+        
+        // 儲存
+        for (JsonNode jsonNode : bpiNode) {
+			Bpi bpi = new Bpi();
+			bpi.setCode(jsonNode.get("code").asText());
+			bpi.setName(getBpiName(bpi.getCode()));
+			bpi.setSymbol(jsonNode.get("symbol").asText());
+			bpi.setRate(Double.valueOf(jsonNode.get("rate").asText().replace(",", "")));
+			bpi.setDescription(jsonNode.get("description").asText());
+			bpi.setRate_float(jsonNode.get("rate_float").asDouble());
+			Bpi save = bpiDao.save(bpi);
+			if (save.getCode() != null) {
+				saveNum++;
+			}
+		}
+        return saveNum;
 	}
 
 	/**

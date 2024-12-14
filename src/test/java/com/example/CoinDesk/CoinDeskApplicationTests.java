@@ -32,8 +32,8 @@ class CoinDeskApplicationTests {
 	}
 
 	@Test
-	void testCoindesk() {
-		String uri = "/coindesk";
+	void getNewBpiTest() {
+		String uri = "/getNewBpi";
 		MvcResult result = null;
 		try {
 			result = mvc.perform(MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON)).andReturn();
@@ -41,8 +41,23 @@ class CoinDeskApplicationTests {
 			e.printStackTrace();
 		}
 		int status = result.getResponse().getStatus();
-		logger.info("/coindesk res status: " + status);
-		Assert.assertEquals("/coindesk 錯誤", 200, status);
+		logger.info(uri + " res status: " + status);
+		Assert.assertEquals(uri + " 錯誤", 200, status);
 	}
 
+	@Test
+	void createBpiTest() {
+		String uri = "/createBpi";
+		String saveNum = null;
+		try {
+			// 執行 GET 請求並取得結果
+			MvcResult result = mvc.perform(MockMvcRequestBuilders.get(uri)).andReturn();
+			// 獲取回傳的 Response Body
+			saveNum = result.getResponse().getContentAsString();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		logger.info(uri + " saveNum: " + saveNum);
+		Assert.assertEquals(uri + " 錯誤", "3", saveNum);
+	}
 }

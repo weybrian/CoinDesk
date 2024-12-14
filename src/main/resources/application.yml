@@ -3,7 +3,7 @@ spring:
     console:
       enabled: true
   datasource:
-    url: jdbc:h2:mem:coindesk # h2 database 連接位址
+    url: jdbc:h2:mem:coindesk;DB_CLOSE_ON_EXIT=FALSE # h2 database 連接位址
     driver-class-name: org.h2.Driver # 配置driver
     username: sa # database 用戶名
     password:  # database 密碼
