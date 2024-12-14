@@ -3,8 +3,6 @@ package com.example.CoinDesk;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -24,8 +22,6 @@ class CoinDeskApplicationTests {
 	// 創建MockMvc類的物件
 	MockMvc mvc;
 
-	private static final Logger logger = LoggerFactory.getLogger(CoinDeskApplicationTests.class);
-
 	@BeforeEach
 	public void setup() {
 		mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
@@ -41,7 +37,6 @@ class CoinDeskApplicationTests {
 			e.printStackTrace();
 		}
 		int status = result.getResponse().getStatus();
-		logger.info(uri + " res status: " + status);
 		Assert.assertEquals(uri + " 錯誤", 200, status);
 	}
 
@@ -57,7 +52,19 @@ class CoinDeskApplicationTests {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		logger.info(uri + " saveNum: " + saveNum);
 		Assert.assertEquals(uri + " 錯誤", "3", saveNum);
+	}
+	
+	@Test
+	void getAllBpisTest() {
+		String uri = "/getAllBpis";
+		String resultString = null;
+		try {
+			MvcResult result = mvc.perform(MockMvcRequestBuilders.get(uri)).andReturn();
+			resultString = result.getResponse().getContentAsString();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		Assert.assertNotNull(uri + " 錯誤", resultString);
 	}
 }

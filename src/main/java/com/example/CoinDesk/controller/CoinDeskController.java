@@ -28,4 +28,13 @@ public class CoinDeskController {
 	public int createBpi() {
 		return coinDeskService.createBpi(getNewBpi().getBody());
 	}
+	
+	/**
+	 * 查詢資料庫全部 bpi
+	 * @return
+	 */
+	@RequestMapping("/getAllBpis")
+	public String getAllBpis() {
+		return coinDeskService.getAllBpis();
+	}
 }

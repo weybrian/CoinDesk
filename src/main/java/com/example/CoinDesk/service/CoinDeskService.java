@@ -78,5 +78,17 @@ public class CoinDeskService {
 			return "其他";
 		}
 	}
+
+	public String getAllBpis() {
+		Iterable<Bpi> bpis = bpiDao.findAll();
+		// 使用 ObjectMapper 將 Iterable 轉成 JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+			return objectMapper.writeValueAsString(bpis);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+        return "getAllBpis error";
+	}
 	
 }
