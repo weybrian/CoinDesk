@@ -3,6 +3,8 @@ package com.example.CoinDesk;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -16,6 +18,9 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 @WebAppConfiguration
 class CoinDeskApplicationTests {
+	
+	private static final Logger logger = LoggerFactory.getLogger(CoinDeskApplicationTests.class);
+	
 	@Autowired
 	private WebApplicationContext webApplicationContext;
 
@@ -25,6 +30,12 @@ class CoinDeskApplicationTests {
 	@BeforeEach
 	public void setup() {
 		mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+		try {
+			// 建立初始資料以供查詢
+			mvc.perform(MockMvcRequestBuilders.get("/createBpi"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Test
@@ -33,6 +44,7 @@ class CoinDeskApplicationTests {
 		MvcResult result = null;
 		try {
 			result = mvc.perform(MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON)).andReturn();
+			logger.info(uri + " " + result.getResponse().getContentAsString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,9 +74,10 @@ class CoinDeskApplicationTests {
 		try {
 			MvcResult result = mvc.perform(MockMvcRequestBuilders.get(uri)).andReturn();
 			resultString = result.getResponse().getContentAsString();
+			logger.info(uri + " " + resultString);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		Assert.assertNotNull(uri + " 錯誤", resultString);
+		Assert.assertNotEquals(uri + " 錯誤", "[]", resultString);
 	}
 }
