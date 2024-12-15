@@ -1,12 +1,17 @@
 package com.example.CoinDesk.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.Locale;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.CoinDesk.dao.BpiDao;
-import com.example.CoinDesk.entity.Bpi;
+import com.example.CoinDesk.model.Coininfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,47 +22,8 @@ public class CoinDeskService {
 	
 	private final RestTemplate restTemplate = new RestTemplate();
 	
-	@Autowired
-	BpiDao bpiDao;
-	
 	public ResponseEntity<String> getNewBpi() {
 		return restTemplate.getForEntity("https://api.coindesk.com/v1/bpi/currentprice.json", String.class);
-	}
-
-	public int createBpi(String resString) {
-		int saveNum = 0;
-		
-		// 初始化 ObjectMapper
-        ObjectMapper mapper = new ObjectMapper();
-
-        // 解析 JSON 字串為 JsonNode
-        JsonNode rootNode = null;
-		try {
-			rootNode = mapper.readTree(resString);
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-
-        // 提取 "bpi" 節點
-        JsonNode bpiNode = rootNode.get("bpi");
-        
-        // 儲存
-        for (JsonNode jsonNode : bpiNode) {
-			Bpi bpi = new Bpi();
-			bpi.setCode(jsonNode.get("code").asText());
-			bpi.setName(getBpiName(bpi.getCode()));
-			bpi.setSymbol(jsonNode.get("symbol").asText());
-			bpi.setRate(Double.valueOf(jsonNode.get("rate").asText().replace(",", "")));
-			bpi.setDescription(jsonNode.get("description").asText());
-			bpi.setRate_float(jsonNode.get("rate_float").asDouble());
-			Bpi save = bpiDao.save(bpi);
-			if (save.getCode() != null) {
-				saveNum++;
-			}
-		}
-        return saveNum;
 	}
 
 	/**
@@ -65,7 +31,7 @@ public class CoinDeskService {
 	 * @param code
 	 * @return
 	 */
-	private String getBpiName(String code) {
+	public String getBpiName(String code) {
 		switch (code) {
 		case "USD":
 			return "美元";
@@ -75,20 +41,67 @@ public class CoinDeskService {
 			return "歐元";
 
 		default:
-			return "其他";
+			return "未定義";
 		}
 	}
 
-	public String getAllBpis() {
-		Iterable<Bpi> bpis = bpiDao.findAll();
-		// 使用 ObjectMapper 將 Iterable 轉成 JSON
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-			return objectMapper.writeValueAsString(bpis);
+	public ArrayList<Coininfo> getCoininfo(ResponseEntity<String> newBpi) {
+		String body = newBpi.getBody();
+		
+		// 初始化 ObjectMapper
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 解析 JSON 字串為 JsonNode
+        JsonNode rootNode = null;
+		try {
+			rootNode = mapper.readTree(body);
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-        return "getAllBpis error";
+		
+		// updatetime
+		String updatetime = rootNode.get("time").get("updated").asText();
+
+        // 提取 "bpi" 節點
+        JsonNode bpiNode = rootNode.get("bpi");
+        
+        ArrayList<Coininfo> coininfoList = new ArrayList<Coininfo>();
+        for (JsonNode jsonNode : bpiNode) {
+			Coininfo coininfo = new Coininfo();
+			coininfo.setUpdateTimeString(parseDatetime(updatetime));
+			coininfo.setCode(jsonNode.get("code").asText());
+			coininfo.setName(getBpiName(coininfo.getCode()));
+			coininfo.setRate(Double.valueOf(jsonNode.get("rate").asText().replace(",", "")));
+			coininfoList.add(coininfo);
+		}
+		return coininfoList;
+	}
+
+	/**
+	 * 解析api時間
+	 * @param updated
+	 * @return
+	 */
+	private String parseDatetime(String updated) {
+		// 定義輸入的日期格式
+		DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder()
+	            .parseCaseInsensitive() // 大小寫不敏感
+	            .appendPattern("MMM dd, yyyy HH:mm:ss z")
+	            .toFormatter(Locale.ENGLISH); // 使用英文語系解析月份
+        
+        // 將日期字串解析為 ZonedDateTime
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(updated, inputFormatter);
+        
+        // 轉換為當地時間（例如 UTC+0 區域）
+        LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+        
+        // 定義輸出的日期格式
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        
+        // 將 LocalDateTime 格式化為指定的字串格式
+        return localDateTime.format(outputFormatter);
 	}
 	
 }
