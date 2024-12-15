@@ -47,7 +47,7 @@ class CoinDeskApplicationTests {
 		// 新增三筆資料
 		try {
 			mvc.perform(MockMvcRequestBuilders.get("/initBpi"));
-			logger.info("新增三筆資料");
+			logger.info("新增初始化三筆資料");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,54 +57,10 @@ class CoinDeskApplicationTests {
 	public void setup() {
 		mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 	}
-
-	@Test
-	void getNewBpiTest() {
-		String uri = "/getNewBpi";
-		MvcResult result = null;
-		try {
-			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
-			logger.info("呼叫 coindesk api " + result.getResponse().getContentAsString());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Test
-	void newBpiTest() {
-		String uri = "/bpis";
-		
-		Bpi bpi = new Bpi();
-		bpi.setCode("USD");
-		bpi.setName(coinDeskService.getBpiName(bpi.getCode()));
-		bpi.setSymbol("&#36;");
-		bpi.setRate("101,954.535");
-		bpi.setDescription("United States Dollar");
-		bpi.setRate_float(101954.5348);
-
-		MvcResult result = null;
-		try {
-			// 新增前查詢全部
-			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
-			result.getResponse().setCharacterEncoding("UTF-8");
-			logger.info("新增前查詢全部 " + result.getResponse().getContentAsString());
-			
-			// 新增
-			String jsonBody = objectMapper.writeValueAsString(bpi);
-			mvc.perform(post(uri)
-			        .contentType(MediaType.APPLICATION_JSON)
-			        .content(jsonBody))
-			        .andExpect(status().isOk());
-
-			// 新增後查詢全部
-			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
-			result.getResponse().setCharacterEncoding("UTF-8");
-			logger.info("新增後查詢全部 " + result.getResponse().getContentAsString());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 	
+	/**
+	 * 查詢全部 test
+	 */
 	@Test
 	void allTest() {
 		String uri = "/bpis";
@@ -118,6 +74,9 @@ class CoinDeskApplicationTests {
 		}
 	}
 	
+	/**
+	 * 查詢一筆 test
+	 */
 	@Test
 	void oneTest() {
 		String uri = "/bpis/2";
@@ -130,7 +89,48 @@ class CoinDeskApplicationTests {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * 新增 test
+	 */
+	@Test
+	void newBpiTest() {
+		String uri = "/bpis";
+		
+		Bpi bpi = new Bpi();
+		bpi.setCode("USD");
+		bpi.setName(coinDeskService.getBpiName(bpi.getCode()));
+		bpi.setSymbol("&#36;");
+		bpi.setRate("101,954.535");
+		bpi.setDescription("United States Dollar");
+		bpi.setRate_float(101954.5348);
+		
+		MvcResult result = null;
+		try {
+			// 新增前查詢全部
+			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
+			result.getResponse().setCharacterEncoding("UTF-8");
+			logger.info("新增前查詢全部 " + result.getResponse().getContentAsString());
+			
+			// 新增
+			String jsonBody = objectMapper.writeValueAsString(bpi);
+			mvc.perform(post(uri)
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(jsonBody))
+			.andExpect(status().isOk());
+			
+			// 新增後查詢全部
+			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
+			result.getResponse().setCharacterEncoding("UTF-8");
+			logger.info("新增後查詢全部 " + result.getResponse().getContentAsString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+	/**
+	 * 更新 test
+	 */
 	@Test
 	void replaceBpiTest() {
 		String uri = "/bpis/3";
@@ -164,6 +164,9 @@ class CoinDeskApplicationTests {
 		}
 	}
 	
+	/**
+	 * 刪除 test
+	 */
 	@Test
 	void deleteBpiTest() {
 		String uri = "/bpis/2";
@@ -180,7 +183,25 @@ class CoinDeskApplicationTests {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * coindesk api test
+	 */
+	@Test
+	void getNewBpiTest() {
+		String uri = "/getNewBpi";
+		MvcResult result = null;
+		try {
+			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
+			logger.info("呼叫 coindesk api " + result.getResponse().getContentAsString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+	/**
+	 * 資料轉換 api test
+	 */
 	@Test
 	void coininfoTest() {
 		String uri = "/coininfo";
@@ -188,7 +209,7 @@ class CoinDeskApplicationTests {
 		try {
 			result = mvc.perform(MockMvcRequestBuilders.get(uri)).andExpect(status().isOk()).andReturn();
 	        result.getResponse().setCharacterEncoding("UTF-8");
-			logger.info("呼叫資料轉換 coininfo api " + result.getResponse().getContentAsString());
+			logger.info("呼叫 資料轉換 api " + result.getResponse().getContentAsString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

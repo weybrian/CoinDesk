@@ -29,29 +29,9 @@ public class CoinDeskController {
 	CoinDeskController(BpiRepository repository) {
 		this.repository = repository;
 	}
-
-	/**
-	 * 發送請求並取得回應
-	 * @return
-	 */
-	@RequestMapping("/getNewBpi")
-    public ResponseEntity<String> getNewBpi() {
-        return coinDeskService.getNewBpi();
-    }
 	
 	/**
-	 * 新增 bpi
-	 */
-	@PostMapping("/bpis")
-	public Bpi newBpi(@RequestBody Bpi newBpi) {
-		if (newBpi.getCode() != null) {
-			newBpi.setName(coinDeskService.getBpiName(newBpi.getCode()));
-		}
-		return repository.save(newBpi);
-	}
-	
-	/**
-	 * 查詢資料庫全部 bpi
+	 * 查詢全部
 	 * @return
 	 */
 	@GetMapping("/bpis")
@@ -60,7 +40,7 @@ public class CoinDeskController {
 	}
 	
 	/**
-	 * 查詢單一 bpi
+	 * 查詢單一
 	 * @param id
 	 * @return
 	 */
@@ -68,6 +48,17 @@ public class CoinDeskController {
 	public Bpi one(@PathVariable Long id) {
 		return repository.findById(id)
 			      .orElseThrow(() -> new IllegalArgumentException("Bpi id " + id + " not found"));
+	}
+	
+	/**
+	 * 新增
+	 */
+	@PostMapping("/bpis")
+	public Bpi newBpi(@RequestBody Bpi newBpi) {
+		if (newBpi.getCode() != null) {
+			newBpi.setName(coinDeskService.getBpiName(newBpi.getCode()));
+		}
+		return repository.save(newBpi);
 	}
 	
 	/**
@@ -103,7 +94,16 @@ public class CoinDeskController {
 	}
 	
 	/**
-	 * 資料轉換 幣別資訊 api
+	 * coindesk API
+	 * @return
+	 */
+	@RequestMapping("/getNewBpi")
+	public ResponseEntity<String> getNewBpi() {
+		return coinDeskService.getNewBpi();
+	}
+	
+	/**
+	 * 資料轉換 api
 	 * @return
 	 */
 	@RequestMapping("/coininfo")
