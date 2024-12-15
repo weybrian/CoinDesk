@@ -9,5 +9,5 @@ public class Coininfo {
 	private String updateTimeString;
 	private String code;
 	private String name;
-	private Double rate;
+	private String rate;
 }

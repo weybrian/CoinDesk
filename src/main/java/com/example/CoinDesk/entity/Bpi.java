@@ -21,7 +21,7 @@ public class Bpi {
 	private String code;
 	private String name;
 	private String symbol;
-	private Double rate;
+	private String rate;
 	private String description;
 	private Double rate_float;
 }

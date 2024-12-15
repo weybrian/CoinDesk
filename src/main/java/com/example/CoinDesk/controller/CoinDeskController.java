@@ -67,7 +67,7 @@ public class CoinDeskController {
 	@GetMapping("/bpis/{id}")
 	public Bpi one(@PathVariable Long id) {
 		return repository.findById(id)
-			      .orElseThrow(() -> new IllegalArgumentException("Bpi not found"));
+			      .orElseThrow(() -> new IllegalArgumentException("Bpi id " + id + " not found"));
 	}
 	
 	/**
@@ -103,11 +103,19 @@ public class CoinDeskController {
 	}
 	
 	/**
-	 * 幣別資訊 api
+	 * 資料轉換 幣別資訊 api
 	 * @return
 	 */
 	@RequestMapping("/coininfo")
 	public ArrayList<Coininfo> getCoininfo() {
 		return coinDeskService.getCoininfo(getNewBpi());
+	}
+	
+	/**
+	 * 初始化Bpi table，查詢一次 coindesk api 並新增資料進 Bpi table
+	 */
+	@RequestMapping("/initBpi")
+	public void initBpi() {
+		coinDeskService.initBpi(getNewBpi());
 	}
 }

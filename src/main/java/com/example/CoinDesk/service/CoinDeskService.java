@@ -7,10 +7,13 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.CoinDesk.dao.BpiRepository;
+import com.example.CoinDesk.entity.Bpi;
 import com.example.CoinDesk.model.Coininfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -21,6 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class CoinDeskService {
 	
 	private final RestTemplate restTemplate = new RestTemplate();
+	
+	@Autowired
+	private BpiRepository repository;
 	
 	public ResponseEntity<String> getNewBpi() {
 		return restTemplate.getForEntity("https://api.coindesk.com/v1/bpi/currentprice.json", String.class);
@@ -73,7 +79,7 @@ public class CoinDeskService {
 			coininfo.setUpdateTimeString(parseDatetime(updatetime));
 			coininfo.setCode(jsonNode.get("code").asText());
 			coininfo.setName(getBpiName(coininfo.getCode()));
-			coininfo.setRate(Double.valueOf(jsonNode.get("rate").asText().replace(",", "")));
+			coininfo.setRate(jsonNode.get("rate").asText());
 			coininfoList.add(coininfo);
 		}
 		return coininfoList;
@@ -102,6 +108,37 @@ public class CoinDeskService {
         
         // 將 LocalDateTime 格式化為指定的字串格式
         return localDateTime.format(outputFormatter);
+	}
+
+	public void initBpi(ResponseEntity<String> newBpi) {
+		String body = newBpi.getBody();
+		
+		// 初始化 ObjectMapper
+        ObjectMapper mapper = new ObjectMapper();
+
+        // 解析 JSON 字串為 JsonNode
+        JsonNode rootNode = null;
+		try {
+			rootNode = mapper.readTree(body);
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+
+        // 提取 "bpi" 節點
+        JsonNode bpiNode = rootNode.get("bpi");
+        
+        for (JsonNode jsonNode : bpiNode) {
+        	Bpi bpi = new Bpi();
+			bpi.setCode(jsonNode.get("code").asText());
+			bpi.setName(getBpiName(bpi.getCode()));
+			bpi.setSymbol(jsonNode.get("symbol").asText());
+			bpi.setRate(jsonNode.get("rate").asText());
+			bpi.setDescription(jsonNode.get("description").asText());
+			bpi.setRate_float(jsonNode.get("rate_float").asDouble());
+			repository.save(bpi);
+		}
 	}
 	
 }
